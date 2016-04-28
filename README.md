@@ -29,3 +29,15 @@ Or by setting the environment variable `MAIL_DRIVER` in your .env file
 ```bash
 MAIL_DRIVER=sendgrid
 ```
+
+
+If you need to pass any options to the guzzle client instance which is making the request to the Send Grid API, you can do so by setting the 'guzzle' options in `config/services.php`
+```php
+'sendgrid' => [
+    'api_key' => env('SENDGRID_API_KEY'),
+    'guzzle' => [
+        'verify' => true,
+        'decode_content' => true,
+    ]
+],
+```

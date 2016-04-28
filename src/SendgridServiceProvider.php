@@ -25,7 +25,7 @@ class SendgridServiceProvider extends ServiceProvider
      * None of the closures are executed until someone tries to send an email.
      *
      * This will register a closure which will be run when 'swift.transport' (the transport manager) is first resolved.
-     * Then we extend the transport manager, by adding the spark post transport object as the 'sparkpost' driver.
+     * Then we extend the transport manager, by adding the Send Grid transport object as the 'sendgrid' driver.
      */
     public function register()
     {
