@@ -1,0 +1,23 @@
+{
+  "name": "clarification/sendgrid-laravel-driver",
+  "type": "library",
+  "description" : "Sendgrid mail driver for Laravel",
+  "keywords": ["laravel", "mail", "driver", "sendgrid"],
+  "license": "MIT",
+  "homepage" : "http://clarification.io",
+  "authors": [
+    {
+      "name" : "Robin Lidbetter",
+      "role" : "Developer"
+    }
+  ],
+  "require": {
+    "illuminate/container": ">=4.2",
+    "swiftmailer/swiftmailer": "~5.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Clarification\\MailDrivers\\Sendgrid\\": "src"
+    }
+  }
+}
