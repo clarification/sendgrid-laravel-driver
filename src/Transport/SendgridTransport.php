@@ -50,6 +50,7 @@ class SendgridTransport extends Transport
         $this->setCc($data, $message);
         $this->setBcc($data, $message);
         $this->setText($data, $message);
+        $this->setReplyTo($data, $message);
         $this->setAttachment($data, $message);
         $this->setSmtpApi($data, $message);
         if (version_compare(ClientInterface::VERSION, '6') === 1) {
@@ -92,6 +93,18 @@ class SendgridTransport extends Transport
             $data['bccname'] = array_values($bcc);
         }
     }
+    /**
+     * @param $data
+     * @param Swift_Mime_Message $message
+     */
+    protected function setReplyTo(&$data, Swift_Mime_Message $message)
+    {
+        if ($replyTo = $message->getReplyTo()) {
+            $data['replyto'] = array_keys($replyTo);
+            $data['replytoname'] = array_values($replyTo);
+        }
+    }
+    
     /**
      * Get From Addresses.
      *
