@@ -101,7 +101,6 @@ class SendgridTransport extends Transport
     {
         if ($replyTo = $message->getReplyTo()) {
             $data['replyto'] = array_keys($replyTo);
-            $data['replytoname'] = array_values($replyTo);
         }
     }
     
