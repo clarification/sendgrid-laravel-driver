@@ -1,5 +1,5 @@
 {
-  "name": "clarification/sendgrid-laravel-driver",
+  "name": "palmerandersen/sendgrid-laravel-driver",
   "type": "library",
   "description" : "Sendgrid mail driver for Laravel",
   "keywords": ["laravel", "mail", "driver", "sendgrid"],
