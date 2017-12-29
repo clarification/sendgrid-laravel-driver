@@ -38,6 +38,7 @@ class SendgridTransport extends Transport
      */
     public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
     {
+        $this->beforeSendPerformed($message);
         list($from, $fromName) = $this->getFromAddresses($message);
         $payload = $this->options;
         $data = [
@@ -58,7 +59,9 @@ class SendgridTransport extends Transport
         } else {
             $payload += ['body' => $data];
         }
-        return $this->client->post('https://api.sendgrid.com/api/mail.send.json', $payload);
+        $response = $this->client->post('https://api.sendgrid.com/api/mail.send.json', $payload);
+        $this->sendPerformed($message);
+        return $response;
     }
     /**
      * @param  $data
