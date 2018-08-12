@@ -17,6 +17,8 @@ class SendgridTransport extends Transport
     protected $client;
     protected $options;
 
+    protected $incrementer = 0;
+
     public function __construct(ClientInterface $client, $api_key)
     {
         $this->client = $client;
@@ -39,6 +41,7 @@ class SendgridTransport extends Transport
     public function send(Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
     {
         $this->beforeSendPerformed($message);
+
         list($from, $fromName) = $this->getFromAddresses($message);
         $payload = $this->options;
         $data = [
@@ -47,6 +50,7 @@ class SendgridTransport extends Transport
             'subject'  => $message->getSubject(),
             'html'     => $message->getBody()
         ];
+
         $this->setTo($data, $message);
         $this->setCc($data, $message);
         $this->setBcc($data, $message);
@@ -54,15 +58,20 @@ class SendgridTransport extends Transport
         $this->setReplyTo($data, $message);
         $this->setAttachment($data, $message);
         $this->setSmtpApi($data, $message);
+
         if (version_compare(ClientInterface::VERSION, '6') === 1) {
             $payload += ['form_params' => $data];
         } else {
             $payload += ['body' => $data];
         }
+
         $response = $this->client->post('https://api.sendgrid.com/api/mail.send.json', $payload);
+
         $this->sendPerformed($message);
+
         return $response;
     }
+
     /**
      * @param  $data
      * @param  Swift_Mime_SimpleMessage $message
@@ -74,6 +83,7 @@ class SendgridTransport extends Transport
             $data['toname'] = array_values($to);
         }
     }
+
     /**
      * @param $data
      * @param Swift_Mime_SimpleMessage $message
@@ -85,6 +95,7 @@ class SendgridTransport extends Transport
             $data['ccname'] = array_values($cc);
         }
     }
+
     /**
      * @param $data
      * @param Swift_Mime_SimpleMessage $message
@@ -96,6 +107,7 @@ class SendgridTransport extends Transport
             $data['bccname'] = array_values($bcc);
         }
     }
+
     /**
      * @param $data
      * @param Swift_Mime_SimpleMessage $message
@@ -106,7 +118,7 @@ class SendgridTransport extends Transport
             $data['replyto'] = array_keys($replyTo);
         }
     }
-    
+
     /**
      * Get From Addresses.
      *
@@ -115,13 +127,15 @@ class SendgridTransport extends Transport
      */
     protected function getFromAddresses(Swift_Mime_SimpleMessage $message)
     {
-        if ($message->getFrom()) {
-            foreach ($message->getFrom() as $address => $name) {
+        if ($from = $message->getFrom()) {
+            foreach ($from as $address => $name) {
                 return [$address, $name];
             }
         }
+
         return [];
     }
+
     /**
      * Set text contents.
      *
@@ -137,6 +151,7 @@ class SendgridTransport extends Transport
             $data['text'] = $attachment->getBody();
         }
     }
+
     /**
      * Set Attachment Files.
      *
@@ -145,15 +160,27 @@ class SendgridTransport extends Transport
      */
     protected function setAttachment(&$data, Swift_Mime_SimpleMessage $message)
     {
-        foreach ($message->getChildren() as $attachment) {
-            if (!$attachment instanceof Swift_Attachment || !strlen($attachment->getBody()) > self::MAXIMUM_FILE_SIZE) {
+        $attachments = $message->getChildren();
+
+        if (!isset($data['files']) && count($attachments) > 0) {
+            $data['files'] = [];
+        }
+
+        foreach ($attachments as $attachment) {
+            if (!$attachment instanceof Swift_Attachment || strlen($attachment->getBody()) > self::MAXIMUM_FILE_SIZE) {
                 continue;
             }
+            $attachmentName = $attachment->getFilename();
+            if (isset($data['files'][$attachmentName])) {
+                $attachmentName .= ++$this->incrementer;
+            }
+
             $handler = tmpfile();
             fwrite($handler, $attachment->getBody());
-            $data['files[' . $attachment->getFilename() . ']'] = $handler;
+            $data['files'][$attachmentName] = $handler;
         }
     }
+
     /**
      * Set Sendgrid SMTP API
      *
@@ -163,12 +190,12 @@ class SendgridTransport extends Transport
     protected function setSmtpApi(&$data, Swift_Mime_SimpleMessage $message)
     {
         foreach ($message->getChildren() as $attachment) {
-            if (!$attachment instanceof Swift_Image
-                || !in_array(self::SMTP_API_NAME, [$attachment->getFilename(), $attachment->getContentType()])
-            ) {
+            if (!$attachment instanceof Swift_Attachment || $attachment instanceof Swift_Image) {
                 continue;
             }
-            $data['x-smtpapi'] = json_encode($attachment->getBody());
+            if (in_array(self::SMTP_API_NAME, [$attachment->getFilename(), $attachment->getContentType()])) {
+                $data['x-smtpapi'] = $attachment->getBody();
+            }
         }
     }
 }
