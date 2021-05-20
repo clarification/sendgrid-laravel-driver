@@ -16,6 +16,8 @@ You will also need to add the sendgrid API Key settings to the array in `config/
     'api_key' => env('SENDGRID_API_KEY'),
 ],
 ```
+
+Then in your `.env` file you have to add
 ```bash
 SENDGRID_API_KEY=__Your_key_here__
 ```
